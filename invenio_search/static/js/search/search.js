@@ -40,7 +40,7 @@ function($, defineComponent, FacetsFilter, SearchResults) {
     $.each(facetsFilter.getFilters(), function(facetName, filters) {
       var incs = $.map(filters.inc, function(v) {
         var queryValue = ':"' + v + '"';
-        if (facetName == "earliest_date") {
+        if (facetName == "earliest_date" || facetName == "opening_date") {
           queryValue = ':' + v;
         }
         return facetName + queryValue;
