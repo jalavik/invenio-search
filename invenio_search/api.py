@@ -23,6 +23,8 @@ from __future__ import unicode_literals
 
 import pypeg2
 
+from flask import current_app
+
 from flask_login import current_user
 
 from invenio.base.helpers import unicodifier
@@ -60,6 +62,7 @@ class Query(object):
         user_info = user_info or current_user
         # Enhance query first
         query = self.query
+        current_app.logger.debug(query)
         if enhance:
             for enhancer in query_enhancers():
                 query = enhancer(query, user_info=user_info,
@@ -67,6 +70,8 @@ class Query(object):
 
         for walker in search_walkers():
             query = query.accept(walker)
+
+        current_app.logger.debug(query)
 
         index = cfg["SEARCH_ELASTIC_COLLECTION_INDEX_MAPPING"].get(
             collection,
