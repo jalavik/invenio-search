@@ -20,17 +20,14 @@
 """Implement AST convertor to Elastic Search DSL."""
 
 from invenio_base.globals import cfg
-from invenio_query_parser.ast import (
-    AndOp, KeywordOp, OrOp,
-    NotOp, Keyword, Value,
-    SingleQuotedValue,
-    DoubleQuotedValue,
-    RegexValue, RangeOp,
-    ValueQuery, EmptyQuery,
-    GreaterOp, GreaterEqualOp,
-    LowerOp, LowerEqualOp
-)
 
+from invenio_query_parser.ast import (
+    AndOp, DoubleQuotedValue, EmptyQuery,
+    GreaterEqualOp, GreaterOp, Keyword,
+    KeywordOp, LowerEqualOp, LowerOp,
+    NotOp, OrOp, RangeOp, RegexValue,
+    SingleQuotedValue, Value, ValueQuery
+)
 from invenio_query_parser.visitor import make_visitor
 
 
@@ -123,6 +120,12 @@ class ElasticSearchDSL(object):
     @visitor(DoubleQuotedValue)
     def visit(self, node):
         def _f(keyword):
+            exactauthor = self.keyword_dict.get('author').get('e')
+            if keyword == exactauthor:
+                from inspirehep.modules.authors.utils import author_tokenize
+                name_variations = author_tokenize(node.value)
+                return {"bool": {"must": [{"terms": {"authors.name_variations": name_variations}}], "should": [
+                    {"match": {"authors.full_name": str(node.value)}}]}}
             if (len(keyword) > 1):
                 return {"bool":
                         {"should": [{"term": {k: str(node.value)}}

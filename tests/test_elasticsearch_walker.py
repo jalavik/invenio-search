@@ -47,6 +47,17 @@ class TestElasticSearchWalker(InvenioTestCase):
             "match_all": {}
         })
 
+    # Author queries
+    def test_doublequoted_author_search(self):
+        from invenio_search.api import Query
+        query_1 = Query("author:\"Jeffrey Goldstone\"").search().recids
+        query_2 = Query("author:\"J Goldstone\"").search().recids
+        query_3 = Query("author:\"Goldstone, Jeffrey\"").search().recids
+        query_4 = Query("author:\"Goldstone, J\"").search().recids
+        self.assertEqual(query_1, query_2)
+        self.assertEqual(query_2, query_3)
+        self.assertEqual(query_3, query_4)
+
     # Value queries
     def test_value_query(self):
         self.assertEqual(ValueQuery(Value("bar")).accept(self.converter), {
