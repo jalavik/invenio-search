@@ -120,8 +120,7 @@ class ElasticSearchDSL(object):
     @visitor(DoubleQuotedValue)
     def visit(self, node):
         def _f(keyword):
-            exactauthor = self.keyword_dict.get('author').get('e')
-            if keyword == exactauthor:
+            if keyword == ['author']:
                 from inspirehep.modules.authors.utils import author_tokenize
                 name_variations = author_tokenize(node.value)
                 return {"bool": {"must": [{"terms": {"authors.name_variations": name_variations}}], "should": [
