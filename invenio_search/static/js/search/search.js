@@ -46,7 +46,7 @@ function($, defineComponent, FacetsFilter, SearchResults) {
         return facetName + queryValue;
       });
       if (incs.length > 1) {
-        partials.push('(' + incs.join(' OR ') + ')');
+        partials.push('(' + incs.join(' AND ') + ')');
       } else {
         partials.push(incs[0]);
       }
