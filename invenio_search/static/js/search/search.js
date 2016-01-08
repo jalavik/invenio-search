@@ -123,6 +123,7 @@ function($, defineComponent, FacetsFilter, SearchResults) {
           queryString + window.location.hash;
 
         window.history.pushState({
+          notFirstPageLoad: true,
           path: path,
           facetsFilter: this.facetsFilter.getFilters(),
           userQuery: userQuery,
@@ -148,6 +149,7 @@ function($, defineComponent, FacetsFilter, SearchResults) {
       // window state if it exists.
       if (window.history.state !== null &&
           // there is no state for this location
+          Object.keys(window.history.state).length > 1 &&
           window.history.state.facetsFilter !== null) {
         this.facetsFilter = new FacetsFilter(window.history.state.facetsFilter);
 
@@ -164,6 +166,10 @@ function($, defineComponent, FacetsFilter, SearchResults) {
         // else use the one provided by the backend-generated html
         this.facetsFilter = this.attr.facetsFilter;
       }
+
+      // Workaround for Safari calling PopState on page load
+      // See http://stackoverflow.com/a/10765676/890185
+      window.history.replaceState({ notFirstPageLoad: true }, null);
 
       // listen on events sent by the facet menu and update the facet filters
       this.on('facetChange', function(ev, data) {
@@ -216,10 +222,13 @@ function($, defineComponent, FacetsFilter, SearchResults) {
       });
 
       // listen on popstate, i.e user clicks browser's back or forward button
-      this.on(window, 'popstate', function() {
+      this.on(window, 'popstate', function(e) {
+        if (!e.originalEvent.state) return;
         // reload the page if
         if (window.history.state === null ||
             // there is no state for this location
+            Object.keys(window.history.state).length == 1 ||
+            // Only the initial notFirstPageLoad key is present
             window.history.state.facetsFilter === null ||
             // or if the results set parent element is not here (not returned by
             // the server) FIXME: always generate the result set?
