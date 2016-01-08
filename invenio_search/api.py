@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2014, 2015 CERN.
+# Copyright (C) 2014, 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -21,18 +21,20 @@
 
 from __future__ import unicode_literals
 
-import pypeg2
-
 from flask import current_app
 
 from flask_login import current_user
 
-from invenio.base.helpers import unicodifier
-from invenio.base.globals import cfg
+from invenio_base.globals import cfg
+from invenio_base.helpers import unicodifier
+
+import pypeg2
 
 from werkzeug.utils import cached_property
 
 from .utils import parser, query_enhancers, query_walkers, search_walkers
+from .walkers.elasticsearch_no_keywords import ElasticSearchNoKeywordsDSL
+from .walkers.elasticsearch_no_keywords import QueryHasKeywords
 from .walkers.match_unit import MatchUnit
 from .walkers.terms import Terms
 
@@ -67,9 +69,12 @@ class Query(object):
             for enhancer in query_enhancers():
                 query = enhancer(query, user_info=user_info,
                                  collection=collection)
-
-        for walker in search_walkers():
+        try:
+            walker = ElasticSearchNoKeywordsDSL()
             query = query.accept(walker)
+        except QueryHasKeywords:
+            for walker in search_walkers():
+                query = query.accept(walker)
 
         current_app.logger.debug(query)
 
