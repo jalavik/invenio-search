@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -95,6 +95,13 @@ class ElasticSearchDSL(object):
     @visitor(Value)
     def visit(self, node):
         def _f(keyword):
+            if keyword == ['authors.full_name']:
+                return {"bool":
+                        {"should": [
+                            {"match": {
+                                "authors.name_variations": str(node.value)}},
+                            {"match": {"authors.full_name": str(node.value)}}]
+                         }}
             return {
                 'multi_match': {
                     'query': node.value,
@@ -120,11 +127,13 @@ class ElasticSearchDSL(object):
     @visitor(DoubleQuotedValue)
     def visit(self, node):
         def _f(keyword):
-            if keyword == ['author']:
-                from inspirehep.modules.authors.utils import author_tokenize
-                name_variations = author_tokenize(node.value)
-                return {"bool": {"must": [{"terms": {"authors.name_variations": name_variations}}], "should": [
-                    {"match": {"authors.full_name": str(node.value)}}]}}
+            if keyword == ['authors.full_name']:
+                return {"bool":
+                        {"must": [
+                            {"match": {"authors.name_variations": str(node.value)}}],
+                            "should": [
+                            {"match": {"authors.full_name": str(node.value)}}]
+                         }}
             if (len(keyword) > 1):
                 return {"bool":
                         {"should": [{"term": {k: str(node.value)}}

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2015 CERN.
+# Copyright (C) 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -50,13 +50,25 @@ class TestElasticSearchWalker(InvenioTestCase):
     # Author queries
     def test_doublequoted_author_search(self):
         from invenio_search.api import Query
-        query_1 = Query("author:\"Jeffrey Goldstone\"").search().recids
-        query_2 = Query("author:\"J Goldstone\"").search().recids
-        query_3 = Query("author:\"Goldstone, Jeffrey\"").search().recids
-        query_4 = Query("author:\"Goldstone, J\"").search().recids
-        self.assertEqual(query_1, query_2)
-        self.assertEqual(query_2, query_3)
-        self.assertEqual(query_3, query_4)
+        query_1 = Query('find a Maldacena, Juan Martin ').search().records()
+        query_1_results = []
+        for record in query_1:
+            query_1_results.append(record.get("control_number"))
+        query_2 = Query('find a j m maldacena').search().records()
+        query_2_results = []
+        for record in query_2:
+            query_2_results.append(record.get("control_number"))
+        query_3 = Query('author: "  j m    maldacena     "').search().records()
+        query_3_results = []
+        for record in query_3:
+            query_3_results.append(record.get("control_number"))
+        query_4 = Query('author: "j M maLDaceNa"').search().records()
+        query_4_results = []
+        for record in query_4:
+            query_4_results.append(record.get("control_number"))
+        self.assertEqual(query_1_results, query_2_results)
+        self.assertEqual(query_2_results, query_3_results)
+        self.assertEqual(query_3_results, query_4_results)
 
     # Value queries
     def test_value_query(self):
