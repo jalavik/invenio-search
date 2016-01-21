@@ -39,31 +39,13 @@ class ElasticSearchNoKeywordsDSL(object):
 
     visitor = make_visitor()
 
-    def __init__(self):
-        self.values = ""
-
     @visitor(KeywordOp)
     def visit(self, node, left, right):
         raise QueryHasKeywords()
 
     @visitor(AndOp)
     def visit(self, node, left, right):
-        return {
-            "multi_match": {
-                "message": {
-                    "query": self.values,
-                    "operator": "or",
-                    "zero_terms_query": "all",
-                    "fields": [
-                        "title^3",
-                        "title.raw^10",
-                        "abstract^2",
-                        "abstract.raw^4",
-                        "author^10",
-                        "author.raw^15",
-                        "reportnumber^10",
-                        "eprint^10",
-                        "doi^10"]}}}
+        return
 
     @visitor(OrOp)
     def visit(self, node, left, right):
@@ -75,22 +57,7 @@ class ElasticSearchNoKeywordsDSL(object):
 
     @visitor(ValueQuery)
     def visit(self, node, op):
-        return {
-            "multi_match": {
-                "message": {
-                    "query": self.values,
-                    "operator": "or",
-                    "zero_terms_query": "all",
-                    "fields": [
-                        "title^3",
-                        "title.raw^10",
-                        "abstract^2",
-                        "abstract.raw^4",
-                        "author^10",
-                        "author.raw^15",
-                        "reportnumber^10",
-                        "eprint^10",
-                        "doi^10"]}}}
+        return
 
     @visitor(Keyword)
     def visit(self, node):
@@ -98,15 +65,15 @@ class ElasticSearchNoKeywordsDSL(object):
 
     @visitor(Value)
     def visit(self, node):
-        self.values += node.value + ' '
+        pass
 
     @visitor(SingleQuotedValue)
     def visit(self, node):
-        self.values += node.value + ' '
+        pass
 
     @visitor(DoubleQuotedValue)
     def visit(self, node):
-        self.values += node.value + ' '
+        pass
 
     @visitor(RegexValue)
     def visit(self, node):
@@ -118,9 +85,7 @@ class ElasticSearchNoKeywordsDSL(object):
 
     @visitor(EmptyQuery)
     def visit(self, node):
-        return {
-            "match_all": {}
-        }
+        return
 
     @visitor(GreaterOp)
     def visit(self, node, value_fn):
