@@ -75,6 +75,7 @@ class Query(object):
             query = {
                 "multi_match": {
                     "query": self._query,
+                    "zero_terms_query": "all",
                     "fields": [
                         "title^3",
                         "title.raw^10",
