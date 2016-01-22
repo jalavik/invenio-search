@@ -40,11 +40,7 @@ Template hierarchy.
 
 """
 
-import datetime
-import time
-
-
-from flask import (Blueprint, abort, current_app, flash, g, jsonify,
+from flask import (Blueprint, abort, flash, g, jsonify,
                    make_response, redirect, render_template, request,
                    url_for)
 from flask_breadcrumbs import (default_breadcrumb_root,
@@ -55,17 +51,12 @@ from invenio_base.decorators import wash_arguments
 from invenio_base.globals import cfg
 from invenio_base.i18n import _
 from invenio_collections.decorators import check_collection
-from invenio_formatter import (
-    format_records, get_output_format_content_type,
-    response_formated_records
-)
+from invenio_formatter import response_formated_records
 from invenio_utils.pagination import Pagination
 
-from werkzeug.http import http_date
 from werkzeug.local import LocalProxy
 
 from ..api import Query
-from ..forms import EasySearchForm
 
 blueprint = Blueprint('search', __name__, url_prefix="",
                       template_folder='../templates',
@@ -74,16 +65,6 @@ blueprint = Blueprint('search', __name__, url_prefix="",
                       static_folder='../static')
 
 default_breadcrumb_root(blueprint, '.')
-
-
-def _collection_of():
-    """Get output format from user settings."""
-    of = current_user['settings'].get('of')
-    if of is not None and of != '':
-        return of
-    return g.collection.formatoptions[0]['code']
-
-collection_of = LocalProxy(_collection_of)
 
 
 def _default_rg():
@@ -172,7 +153,7 @@ def rss(collection, p, jrec, so, rm, rg):
 @blueprint.route('/search', methods=['GET', 'POST'])
 @register_breadcrumb(blueprint, '.browse', _('Search results'))
 @wash_arguments({'p': (unicode, ''),
-                 'of': (unicode, collection_of),
+                 'of': (unicode, 'hb'),
                  'ot': (unicode, None),
                  'so': (unicode, None),
                  'sf': (unicode, None),
@@ -199,8 +180,6 @@ def search(collection, p, of, ot, so, sf, sp, rm, rg, jrec):
 
     # fix for queries like `/search?p=+ellis`
     p = p.strip().encode('utf-8')
-
-    collection_breadcrumbs(collection)
 
     response = Query(p).search(collection=collection.name)
     response.body.update({
@@ -257,8 +236,6 @@ def search(collection, p, of, ot, so, sf, sp, rm, rg, jrec):
         filtered_facets=filtered_facets,
         response=response,
         rg=rg,
-        create_nearest_terms_box=lambda: _("Try to modify the query."),
-        easy_search_form=EasySearchForm(csrf_enabled=False),
         ot=ot,
         pagination=pagination,
         collection=collection,
