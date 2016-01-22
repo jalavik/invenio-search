@@ -76,14 +76,14 @@ blueprint = Blueprint('search', __name__, url_prefix="",
 default_breadcrumb_root(blueprint, '.')
 
 
-def _collection_of():
-    """Get output format from user settings."""
-    of = current_user['settings'].get('of')
-    if of is not None and of != '':
-        return of
-    return g.collection.formatoptions[0]['code']
+# def _collection_of():
+#     """Get output format from user settings."""
+#     of = current_user['settings'].get('of')
+#     if of is not None and of != '':
+#         return of
+#     return g.collection.formatoptions[0]['code']
 
-collection_of = LocalProxy(_collection_of)
+# collection_of = LocalProxy(_collection_of)
 
 
 def _default_rg():
@@ -172,7 +172,7 @@ def rss(collection, p, jrec, so, rm, rg):
 @blueprint.route('/search', methods=['GET', 'POST'])
 @register_breadcrumb(blueprint, '.browse', _('Search results'))
 @wash_arguments({'p': (unicode, ''),
-                 'of': (unicode, collection_of),
+                 'of': (unicode, 'hb'),
                  'ot': (unicode, None),
                  'so': (unicode, None),
                  'sf': (unicode, None),
@@ -187,10 +187,6 @@ def search(collection, p, of, ot, so, sf, sp, rm, rg, jrec):
             or request.args.get('action', '') == 'browse':
         return browse()
 
-    if 'c' in request.args and len(request.args) == 1 \
-            and len(request.args.getlist('c')) == 1:
-        return redirect(url_for('.collection', name=request.args.get('c')))
-
     if 'f' in request.args:
         args = request.args.copy()
         args['p'] = "{0}:{1}".format(args['f'], args['p'])
@@ -199,8 +195,6 @@ def search(collection, p, of, ot, so, sf, sp, rm, rg, jrec):
 
     # fix for queries like `/search?p=+ellis`
     p = p.strip().encode('utf-8')
-
-    collection_breadcrumbs(collection)
 
     response = Query(p).search(collection=collection.name)
     response.body.update({
@@ -257,8 +251,6 @@ def search(collection, p, of, ot, so, sf, sp, rm, rg, jrec):
         filtered_facets=filtered_facets,
         response=response,
         rg=rg,
-        create_nearest_terms_box=lambda: _("Try to modify the query."),
-        easy_search_form=EasySearchForm(csrf_enabled=False),
         ot=ot,
         pagination=pagination,
         collection=collection,
