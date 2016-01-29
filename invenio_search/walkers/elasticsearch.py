@@ -95,7 +95,7 @@ class ElasticSearchDSL(object):
     @visitor(Value)
     def visit(self, node):
         def _f(keyword):
-            if keyword == ['authors.full_name']:
+            if keyword == ['authors.full_name', 'authors.alternative_name']:
                 return {"bool":
                         {"should": [
                             {"match": {
@@ -127,7 +127,7 @@ class ElasticSearchDSL(object):
     @visitor(DoubleQuotedValue)
     def visit(self, node):
         def _f(keyword):
-            if keyword == ['authors.full_name']:
+            if keyword == ['authors.full_name', 'authors.alternative_name']:
                 return {"bool":
                         {"must": [
                             {"match": {"authors.name_variations": str(node.value)}}],
