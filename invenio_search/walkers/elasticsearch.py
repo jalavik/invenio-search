@@ -30,6 +30,8 @@ from invenio_query_parser.ast import (
 )
 from invenio_query_parser.visitor import make_visitor
 
+from ..ast import FilterOp
+
 
 class ElasticSearchDSL(object):
 
@@ -66,6 +68,10 @@ class ElasticSearchDSL(object):
     @visitor(AndOp)
     def visit(self, node, left, right):
         return {'bool': {'must': [left, right]}}
+
+    @visitor(FilterOp)
+    def visit(self, node, left, right):
+        return {'filtered': {'query': [left], "filter": [right]}}
 
     @visitor(OrOp)
     def visit(self, node, left, right):

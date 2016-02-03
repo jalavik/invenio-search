@@ -69,6 +69,7 @@ class Query(object):
         # Enhance query first
         query = self.query
         current_app.logger.debug(query)
+
         if enhance:
             for enhancer in query_enhancers():
                 query = enhancer(query, user_info=user_info,

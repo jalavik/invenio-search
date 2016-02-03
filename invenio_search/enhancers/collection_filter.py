@@ -25,6 +25,8 @@ from invenio_query_parser.ast import (
     AndOp, DoubleQuotedValue, Keyword, KeywordOp, NotOp, OrOp
 )
 
+from ..ast import FilterOp
+
 
 def collection_formatter(value):
     """Format collection filter."""
@@ -105,12 +107,14 @@ def apply(query, user_info=None, collection=None):
     """
     from invenio_collections.cache import restricted_collection_cache
 
+    if not collection:
+        return query
+
     policy = cfg['CFG_WEBSEARCH_VIEWRESTRCOLL_POLICY'].strip().upper()
     restricted_cols = restricted_collection_cache.cache
     permitted_restricted_cols = user_info.get(
         'precached_permitted_restricted_collections', [])
-    current_col = collection or cfg['CFG_SITE_NAME']
     result_tree = create_collection_query(restricted_cols,
                                           permitted_restricted_cols,
-                                          current_col, policy)
-    return AndOp(query, result_tree)
+                                          collection, policy)
+    return FilterOp(query, result_tree)
