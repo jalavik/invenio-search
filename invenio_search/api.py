@@ -25,6 +25,8 @@ from flask import current_app
 
 from flask_login import current_user
 
+from elasticsearch.helpers import scan
+
 from invenio_base.globals import cfg
 from invenio_base.helpers import unicodifier
 
@@ -130,19 +132,18 @@ class Results(object):
 
     @property
     def recids(self):
-        # FIXME add warnings
         from intbitset import intbitset
         from invenio_ext.es import es
-        results = es.search(
+        results = scan(
+            es,
+            query={
+                'fields': [],
+                'query': self.body.get("query")
+            },
             index=self.index,
             doc_type=self.doc_type,
-            body={
-                'size': 9999999,
-                'fields': ['control_number'],
-                'query': self.body.get("query")
-            }
         )
-        return intbitset([int(r['_id']) for r in results['hits']['hits']])
+        return intbitset([int(r['_id']) for r in results])
 
     def _search(self):
         from invenio_ext.es import es
