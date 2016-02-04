@@ -35,7 +35,8 @@ def collection_formatter(value):
 
 def create_collection_query(restricted_cols, permitted_restricted_cols,
                             current_col, policy,
-                            formatter=collection_formatter):
+                            formatter=collection_formatter,
+                            include_deleted=False):
     """Create the new AST nodes that should be added to the search query.
 
     **Set definitions:**
@@ -95,10 +96,13 @@ def create_collection_query(restricted_cols, permitted_restricted_cols,
         # intersect current collection with restrictions
         result_tree = AndOp(current_col_kw, result_tree)
 
+    if not include_deleted:
+        deleted = NotOp(KeywordOp(Keyword("980"), DoubleQuotedValue("DELETED")))
+        result_tree = AndOp(deleted, result_tree)
     return result_tree
 
 
-def apply(query, user_info=None, collection=None):
+def apply(query, user_info=None, collection=None, include_deleted=False):
     """Enhance the query restricting not permitted collections.
 
     Get the permitted restricted collection for the current user from the
@@ -116,5 +120,8 @@ def apply(query, user_info=None, collection=None):
         'precached_permitted_restricted_collections', [])
     result_tree = create_collection_query(restricted_cols,
                                           permitted_restricted_cols,
-                                          collection, policy)
+                                          collection, policy,
+                                          collection_formatter,
+                                          include_deleted)
+
     return FilterOp(query, result_tree)
